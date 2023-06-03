@@ -3,24 +3,25 @@ import subprocess
 
 
 def get_dns_servers():
-    c = wmi.WMI()
+    wmi_service = wmi.WMI()
     dns_servers = {}
 
-    for interface in c.Win32_NetworkAdapterConfiguration(IPEnabled=True):
+    for interface in wmi_service.Win32_NetworkAdapterConfiguration(IPEnabled=True):
         if "Virtual" not in interface.Description:
             dns_servers[interface.Description] = interface.DNSServerSearchOrder
 
     return dns_servers
 
 
-def set_dns_netsh(interface_name, primary_dns, secondary_dns):
-    # Change primary DNS server
-    cmd1 = f'netsh interface ipv4 set dns "{interface_name}" static address={primary_dns}'
-    subprocess.run(cmd1, shell=True)
+def set_dns_wmi(adapter_name, dns_servers):
+    # Connect to WMI namespace
+    wmi_service = wmi.WMI()
 
-    # Change secondary DNS server
-    cmd2 = f'netsh interface ipv4 add dns "{interface_name}" address={secondary_dns} index=2'
-    subprocess.run(cmd2, shell=True)
+    # Get network adapter configuration
+    adapter_config = wmi_service.Win32_NetworkAdapterConfiguration(IPEnabled=True, Description=adapter_name)[0]
+
+    # Set DNS servers
+    adapter_config.SetDNSServerSearchOrder(dns_servers)
 
 
 if __name__ == '__main__':
@@ -35,7 +36,7 @@ if __name__ == '__main__':
         print(f"\nAdapter '{current_adapter_name}'s current DNS servers are: {dns_server}")
         print(f"Setting DNS servers to {google_dns_servers}\n")
         if "Wi-Fi" in current_adapter_name:
-            set_dns_netsh("Wi-Fi", google_dns_servers[0], google_dns_servers[1])
+            set_dns_wmi(current_adapter_name, shecan_dns_servers)
 
     print("Done!")
     print(get_dns_servers())
