@@ -1,6 +1,9 @@
 import ctypes
 import msvcrt
 import os
+from rich.console import Console
+
+console = Console()
 
 
 def clear_terminal() -> None:
@@ -8,7 +11,7 @@ def clear_terminal() -> None:
 
 
 def press_any_key_to_continue() -> None:
-    print("Press any key to continue...")
+    console.print("\n[bold light_steel_blue1]Press any key to continue...[/bold light_steel_blue1]")
     msvcrt.getch()
 
 

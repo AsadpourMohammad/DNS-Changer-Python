@@ -1,16 +1,12 @@
+import questionary
+from rich.console import Console
+from rich.panel import Panel
+from questionary import Style
+
 from dns_functions import display_active_dns, setting_dns_servers, getting_dns_input, clearing_dns_servers
 from system_utils import is_admin, clear_terminal, press_any_key_to_continue
 
-
-def display_main_menu() -> None:
-    print("""
-1. See current Network Connections and DNS Servers
-2. Set DNS Servers to Shecan DNS Servers
-3. Set DNS Servers to Google DNS Servers
-4. Set DNS Servers to specified DNS Servers
-5. Clear DNS Servers (Set to Auto)
-6. Exit
-""")
+console = Console()
 
 
 def handle_see_current_dns_servers() -> None:
@@ -20,7 +16,6 @@ def handle_see_current_dns_servers() -> None:
 
 
 def handle_set_dns_servers(dns_servers: tuple) -> None:
-    clear_terminal()
     setting_dns_servers(dns_servers)
     press_any_key_to_continue()
 
@@ -32,7 +27,6 @@ def handle_set_dns_servers_to_specified() -> None:
 
 
 def handle_clear_dsn_servers() -> None:
-    clear_terminal()
     clearing_dns_servers()
     press_any_key_to_continue()
 
@@ -42,12 +36,10 @@ def main():
     google_dns_servers = ('8.8.8.8', '8.8.4.4')
 
     menu_options = {
-        "1": handle_see_current_dns_servers,
-        "2": lambda: handle_set_dns_servers(shecan_dns_servers),
-        "3": lambda: handle_set_dns_servers(google_dns_servers),
-        "4": handle_set_dns_servers_to_specified,
-        "5": handle_clear_dsn_servers,
-        "6": exit
+        "Set DNS servers to Shecan": lambda: handle_set_dns_servers(shecan_dns_servers),
+        "Set DNS servers to Google": lambda: handle_set_dns_servers(google_dns_servers),
+        "Set DNS servers to specified": handle_set_dns_servers_to_specified,
+        "Clear DNS servers": handle_clear_dsn_servers,
     }
 
     while True:
@@ -55,29 +47,42 @@ def main():
 
         display_active_dns()
 
-        display_main_menu()
+        choice = questionary.select("DNS Changer Application",
+                                    choices=[
+                                        "Set DNS servers to Shecan",
+                                        "Set DNS servers to Google",
+                                        "Set DNS servers to specified",
+                                        "Clear DNS servers",
+                                        "Exit"
+                                    ],
+                                    style=Style(
+                                        [
+                                            ("qmark", "fg:#673ab7 bold"),
+                                            ('highlighted', 'fg:#d70000 bold'),
+                                            ("pointer", "fg:#d70000 bold"),
+                                            ('text', 'fg:#d7ffff bold'),
+                                            ("answer", "fg:#afd7ff bold"),
+                                        ]
+                                    )).ask()
 
-        choice = input("> ")
-        
-        if choice == "6":
-            print("Exiting...")
+        if choice == "Exit":
+            console.print("[bold light_cyan3]Exiting...[/bold light_cyan3]")
             break
 
-        try:
-            menu_options[choice]()
-        except KeyError:
-            continue
-
-
-        
+        menu_options[choice]()
 
 
 if __name__ == '__main__':
     if not is_admin():
-        print("""
-        Because this script uses WMI module to change your DNS servers,
-        you need to run this script as an Administrator, otherwise it will not work.""")
+        panel = Panel("""
+    Because this script changes your DNS servers, 
+    you need to run this script as an Administrator, otherwise it will not work.
+        
+    Also, please note that this application can only been run on Windows.
+""", title="DNS Changer Application", style="bold magenta")
 
-        exit(1)
+        console.print(panel)
+
+        press_any_key_to_continue()
     else:
         main()

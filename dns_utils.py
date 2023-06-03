@@ -1,8 +1,8 @@
 import wmi
-from typing import Dict, List
+from typing import Dict
 
 
-def get_dns_servers() -> Dict[str, List[str]]:
+def get_dns_servers() -> Dict[str, tuple[str]]:
     wmi_service = wmi.WMI()
 
     adapter_configs = [config for config in wmi_service.Win32_NetworkAdapterConfiguration(IPEnabled=True)
