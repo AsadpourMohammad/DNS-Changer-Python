@@ -4,6 +4,8 @@ import questionary
 from rich.console import Console
 from rich.table import Table
 from rich import box
+from rich.panel import Panel
+from rich.columns import Columns
 
 from questionary import Style
 
@@ -54,7 +56,10 @@ def display_active_dns() -> None:
 
         table.add_row(network_connection, ", ".join(dns_servers), dns_servers_name)
 
-    console.print(table)
+    panel = Panel(renderable=table, title="DNS Changer Application", style="bold", title_align="left",
+                  border_style="cyan bold", padding=(1, 5))
+
+    console.print(Columns([panel], align="center"))
 
 
 def setting_dns_servers(choice_dns_servers: tuple[str]) -> None:
@@ -73,10 +78,12 @@ def setting_dns_servers(choice_dns_servers: tuple[str]) -> None:
     current_dns_servers = get_dns_servers()[selected_network]
 
     current_dns_servers_name = "Auto" if is_dns_auto_obtain(selected_network) else next(
-            (dns_name for dns_name, dns_servers in get_all_dns_addresses().items() if dns_servers == current_dns_servers), "Unknown")
+        (dns_name for dns_name, dns_servers in get_all_dns_addresses().items() if dns_servers == current_dns_servers),
+        "Unknown")
 
     choice_dns_servers_name = next(
-        (dns_name for dns_name, dns_servers in get_all_dns_addresses().items() if dns_servers == choice_dns_servers), "Unknown")
+        (dns_name for dns_name, dns_servers in get_all_dns_addresses().items() if dns_servers == choice_dns_servers),
+        "Unknown")
 
     if current_dns_servers == choice_dns_servers:
         console.print(
@@ -85,15 +92,24 @@ def setting_dns_servers(choice_dns_servers: tuple[str]) -> None:
         return
 
     table = Table(title=f"DNS Change Information for network '{selected_network}'", box=box.ROUNDED, show_lines=True)
-    table.add_column("Current DNS Servers", style="cyan bold", header_style="light_sky_blue1")
-    table.add_column("Current DNS Servers Provider", style="yellow3 bold", header_style="light_sky_blue1")
-    table.add_column("New DNS Servers", style="magenta bold", header_style="light_sky_blue1")
-    table.add_column("New DNS Servers Provider", style="yellow3 bold", header_style="light_sky_blue1")
 
-    table.add_row(", ".join(current_dns_servers), current_dns_servers_name,
-                  ", ".join(choice_dns_servers), choice_dns_servers_name)
+    table.add_column("Current DNS Servers",
+                     style="cyan bold", header_style="light_sky_blue1", justify="center", vertical="middle")
+    table.add_column("Current Provider",
+                     style="yellow3 bold", header_style="light_sky_blue1", justify="center", vertical="middle")
+    table.add_column("New DNS Servers",
+                     style="magenta bold", header_style="light_sky_blue1", justify="center", vertical="middle")
+    table.add_column("New Provider",
+                     style="yellow3 bold", header_style="light_sky_blue1", justify="center", vertical="middle")
 
-    console.print(table)
+    new_line = '\n'
+    table.add_row(f"{new_line}".join(current_dns_servers), current_dns_servers_name,
+                  f"{new_line}".join(choice_dns_servers), choice_dns_servers_name)
+
+    panel = Panel(renderable=table, title="DNS Changer Application", style="bold", title_align="left",
+                  border_style="cyan bold", padding=(1, 5))
+
+    console.print(Columns([panel]))
 
     choice = questionary.confirm("Do you want to change DNS servers?").ask()
 

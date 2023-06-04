@@ -32,11 +32,11 @@ def set_dns_servers_to_auto(adapter_name: str) -> None:
 
 def is_dns_auto_obtain(adapter_name):
     wmi_service = wmi.WMI()
-    
+
     adapter_config = wmi_service.Win32_NetworkAdapterConfiguration(IPEnabled=True, Description=adapter_name)[0]
-    
+
     interface_key_path = f"SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\\{adapter_config.SettingID}"
-    
+
     try:
         with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, interface_key_path) as key:
             name_server = winreg.QueryValueEx(key, "NameServer")[0]
@@ -45,5 +45,5 @@ def is_dns_auto_obtain(adapter_name):
                 return True
     except FileNotFoundError:
         pass
-        
+
     return False
