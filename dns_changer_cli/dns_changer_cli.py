@@ -5,7 +5,7 @@ from questionary import Style
 
 from dns_changer_cli.dns_actions import display_active_dns, setting_dns_servers, getting_dns_input, \
     clearing_dns_servers
-from dns_changer_cli.system_utils import is_admin, clear_terminal, press_any_key_to_continue
+from dns_changer_cli.system_utils import is_admin, clear_terminal, press_any_key_to_continue, get_dns_addresses_for_provider
 
 console = Console()
 
@@ -33,12 +33,9 @@ def handle_clear_dsn_servers() -> None:
 
 
 def cli():
-    shecan_dns_servers = ("178.22.122.100", "185.51.200.2")
-    google_dns_servers = ('8.8.8.8', '8.8.4.4')
-
     menu_options = {
-        "Set DNS servers to Shecan": lambda: handle_set_dns_servers(shecan_dns_servers),
-        "Set DNS servers to Google": lambda: handle_set_dns_servers(google_dns_servers),
+        "Set DNS servers to Shecan": lambda: handle_set_dns_servers(get_dns_addresses_for_provider("Shecan")),
+        "Set DNS servers to Google": lambda: handle_set_dns_servers(get_dns_addresses_for_provider("Google")),
         "Set DNS servers to specified": handle_set_dns_servers_to_specified,
         "Clear DNS servers": handle_clear_dsn_servers,
     }

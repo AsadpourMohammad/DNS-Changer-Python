@@ -7,7 +7,8 @@ from rich import box
 
 from questionary import Style
 
-from dns_utils.dns_utils import get_dns_servers, set_dns_servers, set_dns_servers_to_auto
+from dns_utils.dns_utils import get_dns_servers, set_dns_servers, set_dns_servers_to_auto, is_dns_auto_obtain
+from dns_changer_cli.system_utils import get_all_dns_addresses
 
 console = Console()
 
@@ -42,19 +43,15 @@ def select_network_connection(network_and_servers):
 def display_active_dns() -> None:
     network_and_servers = get_network_and_servers()
 
-    dns_addresses = {
-        "Shecan": ("178.22.122.100", "185.51.200.2"),
-        "Google": ("8.8.8.8", "8.8.4.4")
-    }
-
     table = Table(title="Current DNS Information", box=box.ROUNDED, show_lines=True)
     table.add_column("Network Connection", style="cyan bold", header_style="light_sky_blue1")
     table.add_column("DNS Servers", style="red3 bold", header_style="light_sky_blue1")
     table.add_column("Provider", style="yellow3 bold", header_style="light_sky_blue1")
 
     for network_connection, dns_servers in network_and_servers:
-        dns_servers_name = next((dns_name for dns_name, servers in dns_addresses.items() if servers == dns_servers),
-                                "Unknown")
+        dns_servers_name = "Auto" if is_dns_auto_obtain(network_connection) else next(
+            (dns_name for dns_name, servers in get_all_dns_addresses().items() if servers == dns_servers), "Unknown")
+
         table.add_row(network_connection, ", ".join(dns_servers), dns_servers_name)
 
     console.print(table)
@@ -67,11 +64,6 @@ def setting_dns_servers(choice_dns_servers: tuple[str]) -> None:
         console.print("[bold red]No active network connections found![/bold red]\n")
         return
 
-    dns_addresses = {
-        "Shecan": ("178.22.122.100", "185.51.200.2"),
-        "Google": ("8.8.8.8", "8.8.4.4")
-    }
-
     selected_network = select_network_connection(network_and_servers)
 
     if not selected_network:
@@ -80,11 +72,11 @@ def setting_dns_servers(choice_dns_servers: tuple[str]) -> None:
 
     current_dns_servers = get_dns_servers()[selected_network]
 
-    current_dns_servers_name = next(
-        (dns_name for dns_name, dns_servers in dns_addresses.items() if dns_servers == current_dns_servers), "Unknown")
+    current_dns_servers_name = "Auto" if is_dns_auto_obtain(selected_network) else next(
+            (dns_name for dns_name, dns_servers in get_all_dns_addresses().items() if dns_servers == current_dns_servers), "Unknown")
 
     choice_dns_servers_name = next(
-        (dns_name for dns_name, dns_servers in dns_addresses.items() if dns_servers == choice_dns_servers), "Unknown")
+        (dns_name for dns_name, dns_servers in get_all_dns_addresses().items() if dns_servers == choice_dns_servers), "Unknown")
 
     if current_dns_servers == choice_dns_servers:
         console.print(
