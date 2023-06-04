@@ -14,20 +14,36 @@ def get_dns_servers() -> Dict[str, tuple[str]]:
     return dns_servers
 
 
-def set_dns_servers(adapter_name: str, dns_servers: tuple[str]) -> None:
+def get_dns_servers_of_adapter(adapter_name: str) -> Dict[str, tuple[str]]:
     wmi_service = wmi.WMI()
 
     adapter_config = wmi_service.Win32_NetworkAdapterConfiguration(IPEnabled=True, Description=adapter_name)[0]
 
+    return adapter_config.DNSServerSearchOrder
+
+
+def set_dns_servers(adapter_name: str, dns_servers: tuple[str]) -> bool:
+    pre_dns_servers = get_dns_servers_of_adapter(adapter_name)
+
+    wmi_service = wmi.WMI()
+    adapter_config = wmi_service.Win32_NetworkAdapterConfiguration(IPEnabled=True, Description=adapter_name)[0]
     adapter_config.SetDNSServerSearchOrder(dns_servers)
 
+    new_dns_servers = get_dns_servers_of_adapter(adapter_name)
 
-def set_dns_servers_to_auto(adapter_name: str) -> None:
+    return pre_dns_servers != new_dns_servers
+
+
+def set_dns_servers_to_auto(adapter_name: str) -> bool:
+    pre_dns_servers = get_dns_servers_of_adapter(adapter_name)
+
     wmi_service = wmi.WMI()
-
     adapter_config = wmi_service.Win32_NetworkAdapterConfiguration(IPEnabled=True, Description=adapter_name)[0]
-
     adapter_config.SetDNSServerSearchOrder()
+
+    new_dns_servers = get_dns_servers_of_adapter(adapter_name)
+
+    return pre_dns_servers != new_dns_servers
 
 
 def is_dns_auto_obtain(adapter_name):

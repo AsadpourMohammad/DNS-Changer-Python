@@ -117,11 +117,12 @@ def setting_dns_servers(choice_dns_servers: tuple[str]) -> None:
     if choice:
         console.print("\n[bold green]Changing DNS Servers...[/bold green]\n")
 
-        set_dns_servers(selected_network, choice_dns_servers)
+        if set_dns_servers(selected_network, choice_dns_servers):
+            console.print("[bold green]DNS Servers changed successfully![/bold green]\n")
 
-        console.print("[bold green]DNS Servers changed successfully![/bold green]\n")
-
-        display_active_dns()
+            display_active_dns()
+        else:
+            console.print("[bold red]An error occurred while trying to change the DNS Servers! Aborting...[/bold red]\n")
     else:
         console.print("\n[bold red]Aborting...[/bold red]")
 
@@ -145,11 +146,12 @@ def clearing_dns_servers() -> None:
     if choice:
         console.print("\n[bold green]Clearing DNS Servers...[/bold green]\n")
 
-        set_dns_servers_to_auto(selected_network)
+        if set_dns_servers_to_auto(selected_network):
+            console.print("[bold green]DNS Servers Cleared successfully![/bold green]\n")
 
-        console.print("[bold green]DNS Servers Cleared successfully![/bold green]\n")
-
-        display_active_dns()
+            display_active_dns()
+        else:
+            console.print("[bold red]An error occurred while trying to change the DNS Servers! Aborting...[/bold red]\n")
     else:
         console.print("\n[bold red]Aborting...[/bold red]")
 
