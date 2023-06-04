@@ -45,7 +45,8 @@ def select_network_connection(network_and_servers):
 def display_active_dns() -> None:
     network_and_servers = get_network_and_servers()
 
-    table = Table(title="Current DNS Information", box=box.ROUNDED, show_lines=True)
+    table = Table(title="Current DNS Information", box=box.ROUNDED, show_lines=True, width=100)
+
     table.add_column("Network Connection", style="cyan bold", header_style="light_sky_blue1")
     table.add_column("DNS Servers", style="red3 bold", header_style="light_sky_blue1")
     table.add_column("Provider", style="yellow3 bold", header_style="light_sky_blue1")
@@ -87,11 +88,11 @@ def setting_dns_servers(choice_dns_servers: tuple[str]) -> None:
 
     if current_dns_servers == choice_dns_servers:
         console.print(
-            f"[bold red]Your DNS Servers are already set to the specified DNS Servers of[/bold red] "
+            f"\n[bold red]Your DNS Servers are already set to the specified DNS Servers of[/bold red] "
             f"[cyan]{', '.join(choice_dns_servers)}[/cyan] [bold red]of {choice_dns_servers_name}.[/bold red]")
         return
 
-    table = Table(title=f"DNS Change Information for network '{selected_network}'", box=box.ROUNDED, show_lines=True)
+    table = Table(title=f"DNS Change Information for network '{selected_network}'", box=box.ROUNDED, show_lines=True, width=100)
 
     table.add_column("Current DNS Servers",
                      style="cyan bold", header_style="light_sky_blue1", justify="center", vertical="middle")
@@ -131,8 +132,6 @@ def clearing_dns_servers() -> None:
     if not network_and_servers:
         console.print("[bold red]No active network connections found![/bold red]\n")
         return
-
-    print()
 
     selected_network = select_network_connection(network_and_servers)
 
