@@ -6,7 +6,8 @@ from rich.table import Table
 from rich import box
 
 from questionary import Style
-from dns_utils import get_dns_servers, set_dns_servers, set_dns_servers_to_auto
+
+from dns_utils.dns_utils import get_dns_servers, set_dns_servers, set_dns_servers_to_auto
 
 console = Console()
 
@@ -154,19 +155,19 @@ def getting_dns_input() -> Union[Tuple[str], Tuple[str, str]]:
         return bool(re.match(pattern, ip_address))
 
     while True:
-        dns_servers: tuple[str, str] = ("", "")
+        dns_servers = []
 
         primary_dns_server = questionary.text("Primary DNS Server:",
                                               validate=lambda text:
                                               True if is_dns_server(text) else "Invalid IP Address.").ask()
 
-        dns_servers += (primary_dns_server,)
+        dns_servers.append(primary_dns_server)
 
         secondary_dns_server = questionary.text("Secondary DNS Server:",
                                                 validate=lambda text:
                                                 True if is_dns_server(text) else "Invalid IP Address.").ask()
 
-        dns_servers += (secondary_dns_server,)
+        dns_servers.append(secondary_dns_server)
 
         break
 
