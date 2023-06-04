@@ -38,8 +38,8 @@ def cli():
     menu_options = {
         "Set DNS servers to Shecan": lambda: handle_set_dns_servers(get_dns_addresses_for_provider("Shecan")),
         "Set DNS servers to Google": lambda: handle_set_dns_servers(get_dns_addresses_for_provider("Google")),
-        "Set DNS servers to specified": handle_set_dns_servers_to_specified,
-        "Clear DNS servers": handle_clear_dns_servers,
+        "Set DNS servers to specific servers": handle_set_dns_servers_to_specified,
+        "Clear DNS servers (Set to Auto Obtain)": handle_clear_dns_servers,
     }
 
     while True:
@@ -51,8 +51,8 @@ def cli():
                                     choices=[
                                         "Set DNS servers to Shecan",
                                         "Set DNS servers to Google",
-                                        "Set DNS servers to specified",
-                                        "Clear DNS servers",
+                                        "Set DNS servers to specific servers",
+                                        "Clear DNS servers (Set to Auto Obtain)",
                                         "Exit"
                                     ],
                                     style=Style(
