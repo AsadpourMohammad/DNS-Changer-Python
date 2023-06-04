@@ -57,7 +57,7 @@ def setting_dns_servers(action: str, new_servers: tuple[str] = None) -> None:
 
     new_servers_name = get_provider_name(new_servers) if action == "change" else "Auto"
 
-    if current_server_name == new_servers_name:
+    if (action == "change" and current_servers == new_servers) or (action == "clear" and current_server_name == "Auto"):
         console.print(f"\n[bold red]Your DNS Servers are already set to '{new_servers_name}'.[/bold red]")
         return
 
