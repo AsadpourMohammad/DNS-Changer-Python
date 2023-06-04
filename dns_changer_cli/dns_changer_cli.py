@@ -1,60 +1,47 @@
 import questionary
+from questionary import Choice
+from questionary import Style
+
 from rich.console import Console
 from rich.panel import Panel
-from questionary import Style
-import msvcrt
 
-from dns_changer_cli.dns_actions import display_active_dns, setting_dns_servers, getting_dns_input, \
-    clearing_dns_servers
-from dns_changer_cli.system_utils import is_admin, clear_terminal, press_any_key_to_continue, \
-    get_dns_addresses_for_provider
+import ctypes
+import msvcrt
+import os
+
+from dns_changer_cli.dns_actions import display_active_dns, setting_dns_servers, getting_dns_input
+from dns_changer_cli.system_utils import clear_terminal, get_all_dns_addresses, is_dns_server_valid
 
 console = Console()
 
 
-def handle_see_current_dns_servers() -> None:
-    clear_terminal()
-    display_active_dns()
-    press_any_key_to_continue()
+def create_menu():
+    networks_and_servers = get_all_dns_addresses()
 
+    menu_options = {}
 
-def handle_set_dns_servers(dns_servers: tuple) -> None:
-    setting_dns_servers(dns_servers)
-    press_any_key_to_continue()
+    for network, dns_servers in networks_and_servers.items():
+        if all(is_dns_server_valid(server) for server in dns_servers):
+            menu_options[network] = lambda servers=dns_servers: setting_dns_servers("change", servers)
+        else:
+            invalid_choice = Choice(network, disabled="Invalid DNS Servers")
+            menu_options[invalid_choice] = None
 
+    menu_options["Custom"] = lambda: setting_dns_servers("change", getting_dns_input())
+    menu_options["Auto"] = lambda: setting_dns_servers("clear")
+    menu_options["Exit"] = None
 
-def handle_set_dns_servers_to_specified() -> None:
-    dns_servers = getting_dns_input()
-    setting_dns_servers(dns_servers)
-    press_any_key_to_continue()
-
-
-def handle_clear_dns_servers() -> None:
-    clearing_dns_servers()
-    press_any_key_to_continue()
+    return menu_options
 
 
 def cli():
-    menu_options = {
-        "Set DNS servers to Shecan": lambda: handle_set_dns_servers(get_dns_addresses_for_provider("Shecan")),
-        "Set DNS servers to Google": lambda: handle_set_dns_servers(get_dns_addresses_for_provider("Google")),
-        "Set DNS servers to specific servers": handle_set_dns_servers_to_specified,
-        "Clear DNS servers (Set to Auto Obtain)": handle_clear_dns_servers,
-    }
+    menu = create_menu()
 
     while True:
-        clear_terminal()
-
         display_active_dns()
 
-        choice = questionary.select("DNS Changer Application",
-                                    choices=[
-                                        "Set DNS servers to Shecan",
-                                        "Set DNS servers to Google",
-                                        "Set DNS servers to specific servers",
-                                        "Clear DNS servers (Set to Auto Obtain)",
-                                        "Exit"
-                                    ],
+        choice = questionary.select("Set DNS Servers to:",
+                                    choices=menu.keys(),
                                     style=Style(
                                         [
                                             ("qmark", "fg:#673ab7 bold"),
@@ -69,12 +56,32 @@ def cli():
             console.print("[bold light_cyan3]Exiting...[/bold light_cyan3]")
             break
 
-        menu_options[choice]()
+        menu[choice]()
+
+        console.print("\n[bold light_steel_blue1]Press any key to continue...[/bold light_steel_blue1]")
+
+        if msvcrt.getch():
+            clear_terminal()
 
 
 def main():
-    if not is_admin():
+    clear_terminal()
+
+    if os.name != "nt":
         panel = Panel("""
+        This application can only be run on Windows, and won't work on other operating systems.
+
+        [bold light_steel_blue1]Press any key to continue...[/bold light_steel_blue1]
+        """, title="DNS Changer Application", style="bold magenta", width=112)
+
+        console.print(panel)
+
+        if msvcrt.getch():
+            return
+
+    try:
+        if not ctypes.windll.shell32.IsUserAnAdmin():
+            panel = Panel("""
     Because this script changes your DNS servers, 
     you need to run this script as an Administrator, otherwise it will not work.
 
@@ -83,8 +90,10 @@ def main():
     [bold light_steel_blue1]Press any key to continue...[/bold light_steel_blue1]
     """, title="DNS Changer Application", style="bold magenta")
 
-        console.print(panel)
+            console.print(panel)
 
-        msvcrt.getch()
-    else:
-        cli()
+            msvcrt.getch()
+        else:
+            cli()
+    except Exception as e:
+        print(f"An error occurred: {str(e)}")
