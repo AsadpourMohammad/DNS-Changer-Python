@@ -3,15 +3,10 @@ from typing import Union, Tuple, Literal
 
 from questionary import text, confirm
 
-from rich.console import Console
-from rich.columns import Columns
-
-from dns_changer_cli.wrappers.rich_wrappers import TablePanelWrapper, TableWrapper
+from dns_changer_cli.wrappers.rich_wrappers import TablePanelWrapper, TableWrapper, print_err, print_text, print_panel
 from dns_changer_cli.wrappers.questionary_wrappers import SelectWrapper
 from dns_utils.dns_windows_utils import get_all_networks_and_dns_servers, set_dns_of_network
 from dns_changer_cli.dns_provider import get_provider_and_servers_of_network_dns, get_provider_of_servers
-
-__console__ = Console()
 
 
 def active_networks_panel() -> None:
@@ -29,7 +24,7 @@ def active_networks_panel() -> None:
 
     panel_wrapper = TablePanelWrapper(title=table_wrapper.title, table=table_wrapper.table)
 
-    __console__.print(Columns([panel_wrapper.panel], align="center"))
+    print_panel(panel_wrapper.panel)
 
 
 def input_custom_dns_panel() -> Union[Tuple[str], Tuple[str, str], None]:
@@ -69,8 +64,7 @@ def set_dns_servers_panel(action: Literal["change", "clear"], new_servers: tuple
     new_provider = get_provider_of_servers(new_servers) if action == "change" else "Auto"
 
     if (action == "change" and old_servers == new_servers) or (action == "clear" and old_provider == "Auto"):
-        __console__.print(f"\n[bold red]Your DNS Servers are already set to "
-                          f"'{new_servers if action == 'change' else 'Auto'}'.[/bold red]")
+        print_err(f"Your DNS Servers are already set to {new_servers if action == 'change' else 'Auto'}'.")
         return
 
     choice = __confirm_dns_change_panel__(old_provider, old_servers, new_provider, new_servers)
@@ -89,7 +83,7 @@ def __get_user_select_network__():
     network_and_servers = get_all_networks_and_dns_servers()
 
     if not network_and_servers:
-        __console__.print("[bold red]No active network connections found![/bold red]\n")
+        print_err("No active network connections found!\n")
         return None
 
     selected_network = __select_network_connection_panel__(network_and_servers)
@@ -124,23 +118,21 @@ def __confirm_dns_change_panel__(current_name: str, current_servers: tuple[str],
 
     panel_wrapper = TablePanelWrapper(title=table_wrapper.title, table=table_wrapper.table)
 
-    __console__.print(Columns([panel_wrapper.panel], align="center"))
+    print_panel(panel_wrapper.panel)
 
     return confirm("Are you sure you want to change the DNS Servers?").ask()
 
 
 def __handle_dns_action__(action: Literal["change", "clear"], action_function: set_dns_of_network) -> None:
-    __console__.print(f"\n[bold green]{'Changing' if action == 'change' else 'Clearing'} DNS Servers...[/bold green]\n")
+    print_text(f"\n{'Changing' if action == 'change' else 'Clearing'} DNS Servers..\n")
 
     if action_function():
-        __console__.print(
-            f"[bold green]DNS Servers {'changed' if action == 'change' else 'cleared'} successfully![/bold green]\n")
+        print_text(f"DNS Servers {'changed' if action == 'change' else 'cleared'} successfully!\n")
 
         active_networks_panel()
     else:
-        __console__.print(
-            f"[bold red]An error occurred while trying to {action} the DNS Servers! Aborting...[/bold red]\n")
+        print_err(f"An error occurred while trying to {action} the DNS Servers! Aborting...\n")
 
 
 def __abort__():
-    __console__.print("[bold red]Aborting...[/bold red]")
+    print_err("Aborting...")

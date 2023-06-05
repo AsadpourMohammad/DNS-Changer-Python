@@ -1,8 +1,10 @@
 from typing import List, Literal
 
-from rich.table import Table
 from rich import box
+from rich.table import Table
 from rich.panel import Panel
+from rich.console import Console
+from rich.columns import Columns
 
 
 class TextPanelWrapper:
@@ -36,3 +38,19 @@ class TableWrapper:
         elif type == "show-diff":
             old_provider, old_servers, new_provider, new_servers = rows
             self.table.add_row(old_provider, old_servers, new_provider, new_servers, style="bright_red bold")
+
+
+def print_text(msg: str):
+    err_msg = f"[bold green]{msg}[/bold green]"
+
+    Console().print(err_msg)
+
+
+def print_err(msg: str):
+    err_msg = f"[bold red]{msg}[/bold red]"
+
+    Console().print(err_msg)
+
+
+def print_panel(panel: Table):
+    Console().print(Columns([panel], align="center"))

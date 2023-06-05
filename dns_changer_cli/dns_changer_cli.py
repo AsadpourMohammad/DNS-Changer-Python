@@ -6,14 +6,10 @@ import traceback
 
 from questionary import Choice, Separator
 
-from rich.console import Console
-
-from dns_changer_cli.wrappers.rich_wrappers import TextPanelWrapper
+from dns_changer_cli.wrappers.rich_wrappers import TextPanelWrapper, print_panel, print_text
 from dns_changer_cli.wrappers.questionary_wrappers import SelectWrapper
 from dns_changer_cli.dns_actions import active_networks_panel, set_dns_servers_panel, input_custom_dns_panel
 from dns_changer_cli.dns_provider import get_saved_dns_providers
-
-__console__ = Console()
 
 
 def __clear_terminal__() -> None:
@@ -55,12 +51,12 @@ def __cli__():
         choice = SelectWrapper("Set DNS Servers to:", choices=menu_options.keys())()
 
         if choice == "Exit" or choice is None:
-            __console__.print("[bold light_cyan3]Exiting...[/bold light_cyan3]")
+            print_text("Exiting...")
             break
 
         menu_options[choice]()
 
-        __console__.print("\n[bold light_steel_blue1]Press any key to continue...[/bold light_steel_blue1]")
+        print_text("\nPress any key to continue...")
 
         if msvcrt.getch():
             __clear_terminal__()
@@ -85,7 +81,7 @@ def main():
     if os.name != "nt":
         panel_wrapper = TextPanelWrapper("DNS Changer Application", non_windows_err_msg)
 
-        __console__.print(panel_wrapper.panel)
+        print_panel(panel_wrapper.panel)
 
         if msvcrt.getch():
             return
@@ -94,7 +90,7 @@ def main():
         if not ctypes.windll.shell32.IsUserAnAdmin():
             panel_wrapper = TextPanelWrapper("DNS Changer Application", not_admin_err_msg)
 
-            __console__.print(panel_wrapper.panel)
+            print_panel(panel_wrapper.panel)
 
             msvcrt.getch()
         else:
