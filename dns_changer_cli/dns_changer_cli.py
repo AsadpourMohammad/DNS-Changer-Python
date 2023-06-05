@@ -19,7 +19,7 @@ def clear_terminal() -> None:
     os.system('cls' if os.name == 'nt' else 'clear')
 
 
-def create_menu():
+def create_menu_options():
     def is_dns_server_valid(ip_address: str) -> bool:
         return bool(re.match(r"^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$", ip_address))
 
@@ -46,13 +46,13 @@ def create_menu():
 
 
 def cli():
-    menu = create_menu()
+    menu_options = create_menu_options()
 
     while True:
         active_networks_panel()
 
         choice = select("Set DNS Servers to:",
-                        choices=menu.keys(),
+                        choices=menu_options.keys(),
                         instruction=" ",
                         style=Style(
                             [
@@ -68,7 +68,7 @@ def cli():
             console.print("[bold light_cyan3]Exiting...[/bold light_cyan3]")
             break
 
-        menu[choice]()
+        menu_options[choice]()
 
         console.print("\n[bold light_steel_blue1]Press any key to continue...[/bold light_steel_blue1]")
 
