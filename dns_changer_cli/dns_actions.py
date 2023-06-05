@@ -1,5 +1,5 @@
 import re
-from typing import Union, Tuple
+from typing import Union, Tuple, Literal
 
 from questionary import Style, text, confirm, select
 
@@ -39,7 +39,7 @@ def active_networks_panel() -> None:
     console.print(Columns([panel], align="center"))
 
 
-def set_dns_servers_panel(action: str, new_servers: tuple[str] = None) -> None:
+def set_dns_servers_panel(action: Literal["change", "clear"], new_servers: tuple[str] = None) -> None:
     if action == "change" and not new_servers:
         abort()
         return
@@ -114,7 +114,7 @@ def confirm_dns_change_panel(current_name: str, current_servers: tuple[str], new
     return confirm("Are you sure you want to change the DNS Servers?").ask()
 
 
-def handle_dns_action(action: str, action_function: set_dns_of_network) -> None:
+def handle_dns_action(action: Literal["change", "clear"], action_function: set_dns_of_network) -> None:
     console.print(f"\n[bold green]{'Changing' if action == 'change' else 'Clearing'} DNS Servers...[/bold green]\n")
 
     if action_function():

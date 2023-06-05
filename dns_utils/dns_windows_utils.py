@@ -1,7 +1,7 @@
 import wmi
 import winreg
 
-from typing import Dict
+from typing import Dict, Literal
 
 
 # Functions to get and set DNS Servers on windows
@@ -25,7 +25,7 @@ def get_dns_of_network(network: str) -> Dict[str, tuple[str]]:
     return network.DNSServerSearchOrder
 
 
-def set_dns_of_network(action: str, network_name: str, dns_servers: tuple[str] = None) -> bool:
+def set_dns_of_network(action: Literal["change", "clear"], network_name: str, dns_servers: tuple[str] = None) -> bool:
     old_dns_servers = get_dns_of_network(network_name)
 
     wmi_service = wmi.WMI()

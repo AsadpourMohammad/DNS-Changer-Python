@@ -8,6 +8,15 @@ console = Console()
 dns_providers = None
 
 
+def get_saved_dns_providers():
+    global dns_providers
+
+    if dns_providers is None:
+        dns_providers = read_dns_providers_from_json()
+
+    return dns_providers
+
+
 def read_dns_providers_from_json():
     try:
         with open('dnsProviders.json', 'r') as dns_providers_file:
@@ -37,12 +46,3 @@ def read_dns_providers_from_json():
         console.print(panel)
 
         return {}
-
-
-def get_saved_dns_providers():
-    global dns_providers
-
-    if dns_providers is None:
-        dns_providers = read_dns_providers_from_json()
-
-    return dns_providers
