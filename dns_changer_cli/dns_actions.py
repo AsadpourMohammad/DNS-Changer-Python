@@ -1,8 +1,7 @@
 import re
 from typing import Union, Tuple
 
-import questionary
-from questionary import Style
+from questionary import Style, text, confirm, select
 
 from rich.console import Console
 from rich.table import Table
@@ -40,7 +39,7 @@ def active_networks_panel() -> None:
     console.print(Columns([panel], align="center"))
 
 
-def setting_dns_servers(action: str, new_servers: tuple[str] = None) -> None:
+def set_dns_servers_panel(action: str, new_servers: tuple[str] = None) -> None:
     if action == "change" and not new_servers:
         abort()
         return
@@ -66,7 +65,8 @@ def setting_dns_servers(action: str, new_servers: tuple[str] = None) -> None:
         abort()
         return
 
-    action_function = lambda: set_dns_of_network(action, selected_network, new_servers)
+    def action_function():
+        return set_dns_of_network(action, selected_network, new_servers)
 
     handle_dns_action(action, action_function)
 
@@ -76,9 +76,9 @@ def input_custom_dns_panel() -> Union[Tuple[str], Tuple[str, str], None]:
         return bool(re.match(r"^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$", ip_address))
 
     def get_dns(placement) -> str:
-        return questionary.text(f"{placement} DNS Server:",
-                                validate=lambda text: True if is_dns_server_valid(text)
-                                else "Invalid IP Address.").ask()
+        return text(f"{placement} DNS Server:",
+                    validate=lambda input_dns: True if is_dns_server_valid(input_dns)
+                    else "Invalid IP Address.").ask()
 
     primary_dns = get_dns("Primary")
 
@@ -111,7 +111,7 @@ def confirm_dns_change_panel(current_name: str, current_servers: tuple[str], new
 
     console.print(Columns([panel], align="center"))
 
-    return questionary.confirm("Are you sure you want to change the DNS Servers?").ask()
+    return confirm("Are you sure you want to change the DNS Servers?").ask()
 
 
 def handle_dns_action(action: str, action_function: set_dns_of_network) -> None:
@@ -145,16 +145,16 @@ def get_user_select_network():
 def select_network_connection_panel(networks_and_servers):
     network_choices = [network_connection for network_connection in networks_and_servers.keys()]
 
-    selected_network = questionary.select("Select the network connection:", choices=network_choices, instruction=" ",
-                                          style=Style(
-                                              [
-                                                  ("qmark", "fg:#673ab7 bold"),
-                                                  ('highlighted', 'fg:#d70000 bold'),
-                                                  ("pointer", "fg:#d70000 bold"),
-                                                  ('text', 'fg:#d7ffff bold'),
-                                                  ("answer", "fg:#afd7ff bold"),
-                                              ]
-                                          )).ask()
+    selected_network = select("Select the network connection:", choices=network_choices, instruction=" ",
+                              style=Style(
+                                  [
+                                      ("qmark", "fg:#673ab7 bold"),
+                                      ('highlighted', 'fg:#d70000 bold'),
+                                      ("pointer", "fg:#d70000 bold"),
+                                      ('text', 'fg:#d7ffff bold'),
+                                      ("answer", "fg:#afd7ff bold"),
+                                  ]
+                              )).ask()
 
     return selected_network
 

@@ -4,13 +4,12 @@ import os
 import re
 import traceback
 
-import questionary
-from questionary import Choice, Style, Separator
+from questionary import Choice, Style, Separator, select
 
 from rich.console import Console
 from rich.panel import Panel
 
-from dns_changer_cli.dns_actions import active_networks_panel, setting_dns_servers, input_custom_dns_panel
+from dns_changer_cli.dns_actions import active_networks_panel, set_dns_servers_panel, input_custom_dns_panel
 from dns_changer_cli.json_data import get_saved_dns_providers
 
 console = Console()
@@ -30,13 +29,13 @@ def create_menu():
 
     for provider, dns_servers in providers_and_servers.items():
         if all(is_dns_server_valid(server) for server in dns_servers):
-            menu_options[provider] = lambda servers=dns_servers: setting_dns_servers("change", servers)
+            menu_options[provider] = lambda servers=dns_servers: set_dns_servers_panel("change", servers)
         else:
             invalid_choice = Choice(provider, disabled="Invalid DNS Servers")
             menu_options[invalid_choice] = None
 
-    menu_options["Custom"] = lambda: setting_dns_servers("change", input_custom_dns_panel())
-    menu_options["Auto"] = lambda: setting_dns_servers("clear")
+    menu_options["Custom"] = lambda: set_dns_servers_panel("change", input_custom_dns_panel())
+    menu_options["Auto"] = lambda: set_dns_servers_panel("clear")
 
     separator = Separator()
     menu_options[separator] = None
@@ -52,18 +51,18 @@ def cli():
     while True:
         active_networks_panel()
 
-        choice = questionary.select("Set DNS Servers to:",
-                                    choices=menu.keys(),
-                                    instruction=" ",
-                                    style=Style(
-                                        [
-                                            ("qmark", "fg:#673ab7 bold"),
-                                            ('highlighted', 'fg:#d70000 bold'),
-                                            ("pointer", "fg:#d70000 bold"),
-                                            ('text', 'fg:#d7ffff bold'),
-                                            ("answer", "fg:#afd7ff bold"),
-                                        ]
-                                    )).ask()
+        choice = select("Set DNS Servers to:",
+                        choices=menu.keys(),
+                        instruction=" ",
+                        style=Style(
+                            [
+                                ("qmark", "fg:#673ab7 bold"),
+                                ('highlighted', 'fg:#d70000 bold'),
+                                ("pointer", "fg:#d70000 bold"),
+                                ('text', 'fg:#d7ffff bold'),
+                                ("answer", "fg:#afd7ff bold"),
+                            ]
+                        )).ask()
 
         if choice == "Exit" or choice is None:
             console.print("[bold light_cyan3]Exiting...[/bold light_cyan3]")
