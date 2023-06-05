@@ -5,18 +5,18 @@ from rich.panel import Panel
 
 from dns_utils.dns_windows_utils import get_all_networks_and_dns_servers, is_network_dns_auto
 
-console = Console()
+__console__ = Console()
 
-dns_providers = None
+__DNS_PROVIDERS__ = None
 
 
-def get_saved_dns_providers():
-    global dns_providers
+def get_saved_dns_providers() -> dict[str, tuple[str]]:
+    global __DNS_PROVIDERS__
 
-    if dns_providers is None:
-        dns_providers = __read_dns_providers_from_json__()
+    if __DNS_PROVIDERS__ is None:
+        __DNS_PROVIDERS__ = __read_dns_providers_from_json__()
 
-    return dns_providers
+    return __DNS_PROVIDERS__
 
 
 def get_provider_and_servers_of_network_dns(network: str) -> dict[str, any]:
@@ -36,7 +36,7 @@ def get_provider_of_servers(servers: tuple[str]) -> str:
                 "Unknown")
 
 
-def __read_dns_providers_from_json__():
+def __read_dns_providers_from_json__() -> dict[str, tuple[str]]:
     try:
         with open('dnsProviders.json', 'r') as dns_providers_file:
             saved_dns_providers = json.load(dns_providers_file)
@@ -62,6 +62,6 @@ def __read_dns_providers_from_json__():
         """
 
         panel = Panel(json_err_msg, title="JSON READING UNSUCCESSFUL", style="bold magenta", width=112)
-        console.print(panel)
+        __console__.print(panel)
 
         return {}

@@ -12,7 +12,7 @@ from rich.columns import Columns
 from dns_utils.dns_windows_utils import get_all_networks_and_dns_servers, set_dns_of_network
 from dns_changer_cli.dns_provider import get_provider_and_servers_of_network_dns, get_provider_of_servers
 
-console = Console()
+__console__ = Console()
 
 
 def active_networks_panel() -> None:
@@ -32,7 +32,7 @@ def active_networks_panel() -> None:
     panel = Panel(renderable=table, title="DNS Changer Application", style="bold", title_align="left",
                   border_style="cyan bold", padding=(1, 5))
 
-    console.print(Columns([panel], align="center"))
+    __console__.print(Columns([panel], align="center"))
 
 
 def input_custom_dns_panel() -> Union[Tuple[str], Tuple[str, str], None]:
@@ -73,8 +73,8 @@ def set_dns_servers_panel(action: Literal["change", "clear"], new_servers: tuple
     new_provider = get_provider_of_servers(new_servers) if action == "change" else "Auto"
 
     if (action == "change" and old_servers == new_servers) or (action == "clear" and old_provider == "Auto"):
-        console.print(f"\n[bold red]Your DNS Servers are already set to "
-                      f"'{new_servers if action == 'change' else 'Auto'}'.[/bold red]")
+        __console__.print(f"\n[bold red]Your DNS Servers are already set to "
+                          f"'{new_servers if action == 'change' else 'Auto'}'.[/bold red]")
         return
 
     choice = __confirm_dns_change_panel__(old_provider, old_servers, new_provider, new_servers)
@@ -93,7 +93,7 @@ def __get_user_select_network__():
     network_and_servers = get_all_networks_and_dns_servers()
 
     if not network_and_servers:
-        console.print("[bold red]No active network connections found![/bold red]\n")
+        __console__.print("[bold red]No active network connections found![/bold red]\n")
         return None
 
     selected_network = __select_network_connection_panel__(network_and_servers)
@@ -137,23 +137,23 @@ def __confirm_dns_change_panel__(current_name: str, current_servers: tuple[str],
     panel = Panel(renderable=table, title="DNS Changer Application",
                   style="bold", title_align="left", border_style="cyan bold", padding=(1, 5))
 
-    console.print(Columns([panel], align="center"))
+    __console__.print(Columns([panel], align="center"))
 
     return confirm("Are you sure you want to change the DNS Servers?").ask()
 
 
 def __handle_dns_action__(action: Literal["change", "clear"], action_function: set_dns_of_network) -> None:
-    console.print(f"\n[bold green]{'Changing' if action == 'change' else 'Clearing'} DNS Servers...[/bold green]\n")
+    __console__.print(f"\n[bold green]{'Changing' if action == 'change' else 'Clearing'} DNS Servers...[/bold green]\n")
 
     if action_function():
-        console.print(
+        __console__.print(
             f"[bold green]DNS Servers {'changed' if action == 'change' else 'cleared'} successfully![/bold green]\n")
 
         active_networks_panel()
     else:
-        console.print(
+        __console__.print(
             f"[bold red]An error occurred while trying to {action} the DNS Servers! Aborting...[/bold red]\n")
 
 
 def __abort__():
-    console.print("[bold red]Aborting...[/bold red]")
+    __console__.print("[bold red]Aborting...[/bold red]")

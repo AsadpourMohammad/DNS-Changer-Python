@@ -12,14 +12,14 @@ from rich.panel import Panel
 from dns_changer_cli.dns_actions import active_networks_panel, set_dns_servers_panel, input_custom_dns_panel
 from dns_changer_cli.dns_provider import get_saved_dns_providers
 
-console = Console()
+__console__ = Console()
 
 
-def clear_terminal() -> None:
+def __clear_terminal__() -> None:
     os.system('cls' if os.name == 'nt' else 'clear')
 
 
-def create_menu_options():
+def __create_menu_options__():
     def is_dns_server_valid(ip_address: str) -> bool:
         return bool(re.match(r"^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$", ip_address))
 
@@ -45,8 +45,8 @@ def create_menu_options():
     return menu_options
 
 
-def cli():
-    menu_options = create_menu_options()
+def __cli__():
+    menu_options = __create_menu_options__()
 
     while True:
         active_networks_panel()
@@ -65,19 +65,19 @@ def cli():
                         )).ask()
 
         if choice == "Exit" or choice is None:
-            console.print("[bold light_cyan3]Exiting...[/bold light_cyan3]")
+            __console__.print("[bold light_cyan3]Exiting...[/bold light_cyan3]")
             break
 
         menu_options[choice]()
 
-        console.print("\n[bold light_steel_blue1]Press any key to continue...[/bold light_steel_blue1]")
+        __console__.print("\n[bold light_steel_blue1]Press any key to continue...[/bold light_steel_blue1]")
 
         if msvcrt.getch():
-            clear_terminal()
+            __clear_terminal__()
 
 
 def main():
-    clear_terminal()
+    __clear_terminal__()
 
     non_windows_err_msg = """
     Currently, this app can only be run on Windows, and won't work on other operating systems.
@@ -95,7 +95,7 @@ def main():
     if os.name != "nt":
         panel = Panel(non_windows_err_msg, title="DNS Changer Application", style="bold magenta", width=112)
 
-        console.print(panel)
+        __console__.print(panel)
 
         if msvcrt.getch():
             return
@@ -104,10 +104,10 @@ def main():
         if not ctypes.windll.shell32.IsUserAnAdmin():
             panel = Panel(not_admin_err_msg, title="DNS Changer Application", style="bold magenta", width=112)
 
-            console.print(panel)
+            __console__.print(panel)
 
             msvcrt.getch()
         else:
-            cli()
+            __cli__()
     except Exception:
         traceback.print_exc()
