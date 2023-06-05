@@ -10,7 +10,7 @@ dns_providers = None
 
 def read_dns_providers_from_json():
     try:
-        with open('dnsAddresses.json', 'r') as dns_providers_file:
+        with open('dnsProviders.json', 'r') as dns_providers_file:
             saved_dns_providers = json.load(dns_providers_file)
 
         for provider in saved_dns_providers:
@@ -19,12 +19,12 @@ def read_dns_providers_from_json():
         return saved_dns_providers
     except (FileNotFoundError, json.JSONDecodeError):
         json_err_msg = """
-        An error occurred during the loading of DNS addresses JSON file.
+        An error occurred during the loading of DNS Providers JSON file.
         
-        Please create a dnsAddresses.json file in the same directory as the current script with
-        the desired networks and dns servers if one does not exists, and then try again.
+        Please create a dnsProviders.json file in the same directory as the current script with
+        the desired providers and their dns servers if one does not exists, and then try again.
     
-        Also, make sure to add the network connections in this format:
+        Also, make sure to add the providers in this format:
     
         {
             "Google": ["8.8.8.8", "8.8.4.4"]
