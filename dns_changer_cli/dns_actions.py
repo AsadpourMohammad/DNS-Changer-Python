@@ -4,11 +4,9 @@ from typing import Union, Tuple, Literal
 from questionary import Style, text, confirm, select
 
 from rich.console import Console
-from rich.table import Table
-from rich import box
-from rich.panel import Panel
 from rich.columns import Columns
 
+from dns_changer_cli.wrappers.rich_wrappers import TablePanelWrapper, TableWrapper
 from dns_utils.dns_windows_utils import get_all_networks_and_dns_servers, set_dns_of_network
 from dns_changer_cli.dns_provider import get_provider_and_servers_of_network_dns, get_provider_of_servers
 
@@ -18,21 +16,19 @@ __console__ = Console()
 def active_networks_panel() -> None:
     networks_and_servers = get_all_networks_and_dns_servers()
 
-    table = Table(title="Current DNS Information", box=box.ROUNDED, show_lines=True, width=100)
+    all_networks_info = [
+        [network, ", ".join(dns_servers), get_provider_of_servers(dns_servers)]
+        for network, dns_servers in networks_and_servers.items()
+    ]
 
-    table.add_column("Network Connection", style="cyan bold", header_style="light_sky_blue1")
-    table.add_column("DNS Servers", style="red3 bold", header_style="light_sky_blue1")
-    table.add_column("Provider", style="yellow3 bold", header_style="light_sky_blue1")
+    table_wrapper = TableWrapper(title="Current DNS Information",
+                                 columns=["Network Connection", "DNS Servers", "Provider"],
+                                 rows=all_networks_info,
+                                 type="show-current")
 
-    for network, dns_servers in networks_and_servers.items():
-        provider = get_provider_and_servers_of_network_dns(network)['provider']
+    panel_wrapper = TablePanelWrapper(title=table_wrapper.title, table=table_wrapper.table)
 
-        table.add_row(network, ", ".join(dns_servers), provider)
-
-    panel = Panel(renderable=table, title="DNS Changer Application", style="bold", title_align="left",
-                  border_style="cyan bold", padding=(1, 5))
-
-    __console__.print(Columns([panel], align="center"))
+    __console__.print(Columns([panel_wrapper.panel], align="center"))
 
 
 def input_custom_dns_panel() -> Union[Tuple[str], Tuple[str, str], None]:
@@ -121,23 +117,23 @@ def __select_network_connection_panel__(networks_and_servers):
     return selected_network
 
 
-def __confirm_dns_change_panel__(current_name: str, current_servers: tuple[str], new_name: str,
-                                 new_servers: tuple[str]) -> bool:
-    table = Table(title="Confirm DNS Servers Change", box=box.ROUNDED, show_lines=True, width=100)
+def __confirm_dns_change_panel__(current_name: str, current_servers: tuple[str],
+                                 new_name: str, new_servers: tuple[str]) -> bool:
+    new_line = "\n"
 
-    table.add_column("Current DNS Servers", style="cyan bold", header_style="light_sky_blue1")
-    table.add_column("Current Provider", style="yellow3 bold", header_style="light_sky_blue1")
-    table.add_column("New DNS Servers", style="red3 bold", header_style="light_sky_blue1")
-    table.add_column("New Provider", style="yellow3 bold", header_style="light_sky_blue1")
+    change_info = [
+        f"{new_line}".join(current_servers), current_name,
+        f"{new_line}".join(new_servers) if new_servers else "Unknown", new_name
+    ]
 
-    new_line = '\n'
-    table.add_row(f"{new_line}".join(current_servers), current_name,
-                  f"{new_line}".join(new_servers) if new_servers else "Unknown", new_name)
+    table_wrapper = TableWrapper(title="Confirm DNS Servers Change",
+                                 columns=["Current DNS Servers", "Current Provider", "New DNS Servers", "New Provider"],
+                                 rows=change_info,
+                                 type="show-diff")
 
-    panel = Panel(renderable=table, title="DNS Changer Application",
-                  style="bold", title_align="left", border_style="cyan bold", padding=(1, 5))
+    panel_wrapper = TablePanelWrapper(title=table_wrapper.title, table=table_wrapper.table)
 
-    __console__.print(Columns([panel], align="center"))
+    __console__.print(Columns([panel_wrapper.panel], align="center"))
 
     return confirm("Are you sure you want to change the DNS Servers?").ask()
 

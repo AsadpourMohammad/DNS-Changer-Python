@@ -7,8 +7,8 @@ import traceback
 from questionary import Choice, Style, Separator, select
 
 from rich.console import Console
-from rich.panel import Panel
 
+from dns_changer_cli.wrappers.rich_wrappers import TextPanelWrapper
 from dns_changer_cli.dns_actions import active_networks_panel, set_dns_servers_panel, input_custom_dns_panel
 from dns_changer_cli.dns_provider import get_saved_dns_providers
 
@@ -93,18 +93,18 @@ def main():
     """
 
     if os.name != "nt":
-        panel = Panel(non_windows_err_msg, title="DNS Changer Application", style="bold magenta", width=112)
+        panel_wrapper = TextPanelWrapper("DNS Changer Application", non_windows_err_msg)
 
-        __console__.print(panel)
+        __console__.print(panel_wrapper.panel)
 
         if msvcrt.getch():
             return
 
     try:
         if not ctypes.windll.shell32.IsUserAnAdmin():
-            panel = Panel(not_admin_err_msg, title="DNS Changer Application", style="bold magenta", width=112)
+            panel_wrapper = TextPanelWrapper("DNS Changer Application", not_admin_err_msg)
 
-            __console__.print(panel)
+            __console__.print(panel_wrapper.panel)
 
             msvcrt.getch()
         else:
