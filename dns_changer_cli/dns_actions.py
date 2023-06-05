@@ -1,12 +1,13 @@
 import re
 from typing import Union, Tuple, Literal
 
-from questionary import Style, text, confirm, select
+from questionary import text, confirm
 
 from rich.console import Console
 from rich.columns import Columns
 
 from dns_changer_cli.wrappers.rich_wrappers import TablePanelWrapper, TableWrapper
+from dns_changer_cli.wrappers.questionary_wrappers import SelectWrapper
 from dns_utils.dns_windows_utils import get_all_networks_and_dns_servers, set_dns_of_network
 from dns_changer_cli.dns_provider import get_provider_and_servers_of_network_dns, get_provider_of_servers
 
@@ -32,13 +33,12 @@ def active_networks_panel() -> None:
 
 
 def input_custom_dns_panel() -> Union[Tuple[str], Tuple[str, str], None]:
-    def is_dns_server_valid(ip_address: str) -> bool:
-        return bool(re.match(r"^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$", ip_address))
+    def validate_dns_servers(input_dns: str) -> bool:
+        validated = bool(re.match(r"^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$", input_dns))
+        return True if validated else "Invalid IP Address."
 
     def get_dns(placement) -> str:
-        return text(f"{placement} DNS Server:",
-                    validate=lambda input_dns: True if is_dns_server_valid(input_dns)
-                    else "Invalid IP Address.").ask()
+        return text(f"{placement} DNS Server:", validate=lambda input_dns: validate_dns_servers(input_dns)).ask()
 
     primary_dns = get_dns("Primary")
 
@@ -103,16 +103,7 @@ def __get_user_select_network__():
 def __select_network_connection_panel__(networks_and_servers):
     network_choices = [network_connection for network_connection in networks_and_servers.keys()]
 
-    selected_network = select("Select the network connection:", choices=network_choices, instruction=" ",
-                              style=Style(
-                                  [
-                                      ("qmark", "fg:#673ab7 bold"),
-                                      ('highlighted', 'fg:#d70000 bold'),
-                                      ("pointer", "fg:#d70000 bold"),
-                                      ('text', 'fg:#d7ffff bold'),
-                                      ("answer", "fg:#afd7ff bold"),
-                                  ]
-                              )).ask()
+    selected_network = SelectWrapper(question="Select the network connection:", choices=network_choices)()
 
     return selected_network
 

@@ -4,11 +4,12 @@ import os
 import re
 import traceback
 
-from questionary import Choice, Style, Separator, select
+from questionary import Choice, Separator
 
 from rich.console import Console
 
 from dns_changer_cli.wrappers.rich_wrappers import TextPanelWrapper
+from dns_changer_cli.wrappers.questionary_wrappers import SelectWrapper
 from dns_changer_cli.dns_actions import active_networks_panel, set_dns_servers_panel, input_custom_dns_panel
 from dns_changer_cli.dns_provider import get_saved_dns_providers
 
@@ -51,18 +52,7 @@ def __cli__():
     while True:
         active_networks_panel()
 
-        choice = select("Set DNS Servers to:",
-                        choices=menu_options.keys(),
-                        instruction=" ",
-                        style=Style(
-                            [
-                                ("qmark", "fg:#673ab7 bold"),
-                                ('highlighted', 'fg:#d70000 bold'),
-                                ("pointer", "fg:#d70000 bold"),
-                                ('text', 'fg:#d7ffff bold'),
-                                ("answer", "fg:#afd7ff bold"),
-                            ]
-                        )).ask()
+        choice = SelectWrapper("Set DNS Servers to:", choices=menu_options.keys())()
 
         if choice == "Exit" or choice is None:
             __console__.print("[bold light_cyan3]Exiting...[/bold light_cyan3]")
