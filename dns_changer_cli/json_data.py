@@ -5,18 +5,18 @@ from rich.panel import Panel
 
 console = Console()
 
-dns_servers = None
+dns_providers = None
 
 
-def read_dns_servers_from_json():
+def read_dns_providers_from_json():
     try:
-        with open('dnsAddresses.json', 'r') as dns_addresses_file:
-            dns_addresses = json.load(dns_addresses_file)
+        with open('dnsAddresses.json', 'r') as dns_providers_file:
+            saved_dns_providers = json.load(dns_providers_file)
 
-        for key in dns_addresses:
-            dns_addresses[key] = tuple(dns_addresses[key])
+        for provider in saved_dns_providers:
+            saved_dns_providers[provider] = tuple(saved_dns_providers[provider])
 
-        return dns_addresses
+        return saved_dns_providers
     except (FileNotFoundError, json.JSONDecodeError):
         json_err_msg = """
         An error occurred during the loading of DNS addresses JSON file.
@@ -39,10 +39,10 @@ def read_dns_servers_from_json():
         return {}
 
 
-def get_all_dns_addresses():
-    global dns_servers
+def get_saved_dns_providers():
+    global dns_providers
 
-    if dns_servers is None:
-        dns_servers = read_dns_servers_from_json()
+    if dns_providers is None:
+        dns_providers = read_dns_providers_from_json()
 
-    return dns_servers
+    return dns_providers

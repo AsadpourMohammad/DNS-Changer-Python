@@ -10,9 +10,8 @@ from rich import box
 from rich.panel import Panel
 from rich.columns import Columns
 
-from dns_utils.dns_utils import get_all_networks_and_dns_servers, set_dns_servers_of_adaptor, \
-    set_dns_servers_of_adaptor_to_auto, is_dns_of_adaptor_auto_obtain
-from dns_changer_cli.json_data import get_all_dns_addresses
+from dns_utils.dns_windows_utils import get_all_networks_and_dns_servers, set_dns_of_network, is_network_dns_auto
+from dns_changer_cli.json_data import get_saved_dns_providers
 
 console = Console()
 
@@ -21,8 +20,8 @@ def abort():
     console.print("[bold red]Aborting...[/bold red]")
 
 
-def display_active_dns() -> None:
-    network_and_servers = get_all_networks_and_dns_servers()
+def active_networks_panel() -> None:
+    networks_and_servers = get_all_networks_and_dns_servers()
 
     table = Table(title="Current DNS Information", box=box.ROUNDED, show_lines=True, width=100)
 
@@ -30,11 +29,10 @@ def display_active_dns() -> None:
     table.add_column("DNS Servers", style="red3 bold", header_style="light_sky_blue1")
     table.add_column("Provider", style="yellow3 bold", header_style="light_sky_blue1")
 
-    for network_connection, dns_servers in network_and_servers.items():
-        dns_servers_name = "Auto" if is_dns_of_adaptor_auto_obtain(network_connection) \
-            else get_provider_name(dns_servers)
+    for network, dns_servers in networks_and_servers.items():
+        provider = get_provider_and_servers_of_network_dns(network)['provider']
 
-        table.add_row(network_connection, ", ".join(dns_servers), dns_servers_name)
+        table.add_row(network, ", ".join(dns_servers), provider)
 
     panel = Panel(renderable=table, title="DNS Changer Application", style="bold", title_align="left",
                   border_style="cyan bold", padding=(1, 5))
@@ -53,32 +51,27 @@ def setting_dns_servers(action: str, new_servers: tuple[str] = None) -> None:
         abort()
         return
 
-    current_server_name, current_servers = get_network_name_and_server(selected_network)
+    old_provider, old_servers = get_provider_and_servers_of_network_dns(selected_network).values()
 
-    new_servers_name = get_provider_name(new_servers) if action == "change" else "Auto"
+    new_provider = get_provider_of_servers(new_servers) if action == "change" else "Auto"
 
-    if (action == "change" and current_servers == new_servers) or (action == "clear" and current_server_name == "Auto"):
-        console.print(f"\n[bold red]Your DNS Servers are already set to '{new_servers_name}'.[/bold red]")
+    if (action == "change" and old_servers == new_servers) or (action == "clear" and old_provider == "Auto"):
+        console.print(f"\n[bold red]Your DNS Servers are already set to "
+                      f"'{new_servers if action == 'change' else 'Auto'}'.[/bold red]")
         return
 
-    choice = confirm_dns_change(current_server_name, current_servers, new_servers_name, new_servers)
+    choice = confirm_dns_change_panel(old_provider, old_servers, new_provider, new_servers)
 
     if not choice:
         abort()
         return
 
-    def change_dns():
-        return set_dns_servers_of_adaptor(selected_network, new_servers)
-
-    def clear_dns():
-        return set_dns_servers_of_adaptor_to_auto(selected_network)
-
-    action_function = change_dns if action == "change" else clear_dns
+    action_function = lambda: set_dns_of_network(action, selected_network, new_servers)
 
     handle_dns_action(action, action_function)
 
 
-def input_custom_dns() -> Union[Tuple[str], Tuple[str, str], None]:
+def input_custom_dns_panel() -> Union[Tuple[str], Tuple[str, str], None]:
     def is_dns_server_valid(ip_address: str) -> bool:
         return bool(re.match(r"^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$", ip_address))
 
@@ -100,7 +93,8 @@ def input_custom_dns() -> Union[Tuple[str], Tuple[str, str], None]:
     return primary_dns, secondary_dns
 
 
-def confirm_dns_change(current_name: str, current_servers: tuple[str], new_name: str, new_servers: tuple[str]) -> bool:
+def confirm_dns_change_panel(current_name: str, current_servers: tuple[str], new_name: str,
+                             new_servers: tuple[str]) -> bool:
     table = Table(title="Confirm DNS Servers Change", box=box.ROUNDED, show_lines=True, width=100)
 
     table.add_column("Current DNS Servers", style="cyan bold", header_style="light_sky_blue1")
@@ -120,29 +114,17 @@ def confirm_dns_change(current_name: str, current_servers: tuple[str], new_name:
     return questionary.confirm("Are you sure you want to change the DNS Servers?").ask()
 
 
-def handle_dns_action(action: str,
-                      action_function: Union[set_dns_servers_of_adaptor, set_dns_servers_of_adaptor_to_auto]) -> None:
+def handle_dns_action(action: str, action_function: set_dns_of_network) -> None:
     console.print(f"\n[bold green]{'Changing' if action == 'change' else 'Clearing'} DNS Servers...[/bold green]\n")
 
     if action_function():
         console.print(
             f"[bold green]DNS Servers {'changed' if action == 'change' else 'cleared'} successfully![/bold green]\n")
 
-        display_active_dns()
+        active_networks_panel()
     else:
         console.print(
             f"[bold red]An error occurred while trying to {action} the DNS Servers! Aborting...[/bold red]\n")
-
-
-def get_all_network_and_servers() -> list[tuple[str, tuple[str]]]:
-    all_networks_and_servers = get_all_networks_and_dns_servers()
-    network_and_servers = []
-
-    for network_connection in all_networks_and_servers:
-        dns_servers = all_networks_and_servers[network_connection]
-        network_and_servers.append((network_connection, dns_servers))
-
-    return network_and_servers
 
 
 def get_user_select_network():
@@ -152,7 +134,7 @@ def get_user_select_network():
         console.print("[bold red]No active network connections found![/bold red]\n")
         return None
 
-    selected_network = select_network_connection(network_and_servers)
+    selected_network = select_network_connection_panel(network_and_servers)
 
     if not selected_network:
         return None
@@ -160,16 +142,8 @@ def get_user_select_network():
     return selected_network
 
 
-def get_network_name_and_server(network):
-    servers = get_all_networks_and_dns_servers()[network]
-
-    name = "Auto" if is_dns_of_adaptor_auto_obtain(network) else get_provider_name(servers)
-
-    return name, servers
-
-
-def select_network_connection(network_and_servers):
-    network_choices = [network_connection for network_connection in network_and_servers.keys()]
+def select_network_connection_panel(networks_and_servers):
+    network_choices = [network_connection for network_connection in networks_and_servers.keys()]
 
     selected_network = questionary.select("Select the network connection:", choices=network_choices, instruction=" ",
                                           style=Style(
@@ -185,6 +159,18 @@ def select_network_connection(network_and_servers):
     return selected_network
 
 
-def get_provider_name(servers: tuple[str]) -> str:
-    return next((dns_name for dns_name, dns_servers in get_all_dns_addresses().items() if dns_servers == servers),
+def get_provider_and_servers_of_network_dns(network: str) -> dict[str, any]:
+    """
+    Checks to see if the DNS Servers of the selected network match a known provider.
+    It can either be a known provider, "Auto" if network is set to auto obtain, or "Unknown" if no match is made.
+    """
+    servers = get_all_networks_and_dns_servers()[network]
+
+    provider = "Auto" if is_network_dns_auto(network) else get_provider_of_servers(servers)
+
+    return {'provider': provider, 'servers': servers}
+
+
+def get_provider_of_servers(servers: tuple[str]) -> str:
+    return next((provider for provider, dns_servers in get_saved_dns_providers().items() if dns_servers == servers),
                 "Unknown")

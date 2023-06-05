@@ -10,8 +10,8 @@ from questionary import Choice, Style, Separator
 from rich.console import Console
 from rich.panel import Panel
 
-from dns_changer_cli.dns_actions import display_active_dns, setting_dns_servers, input_custom_dns
-from dns_changer_cli.json_data import get_all_dns_addresses
+from dns_changer_cli.dns_actions import active_networks_panel, setting_dns_servers, input_custom_dns_panel
+from dns_changer_cli.json_data import get_saved_dns_providers
 
 console = Console()
 
@@ -24,18 +24,18 @@ def create_menu():
     def is_dns_server_valid(ip_address: str) -> bool:
         return bool(re.match(r"^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$", ip_address))
 
-    networks_and_servers = get_all_dns_addresses()
+    providers_and_servers = get_saved_dns_providers()
 
     menu_options = {}
 
-    for network, dns_servers in networks_and_servers.items():
+    for provider, dns_servers in providers_and_servers.items():
         if all(is_dns_server_valid(server) for server in dns_servers):
-            menu_options[network] = lambda servers=dns_servers: setting_dns_servers("change", servers)
+            menu_options[provider] = lambda servers=dns_servers: setting_dns_servers("change", servers)
         else:
-            invalid_choice = Choice(network, disabled="Invalid DNS Servers")
+            invalid_choice = Choice(provider, disabled="Invalid DNS Servers")
             menu_options[invalid_choice] = None
 
-    menu_options["Custom"] = lambda: setting_dns_servers("change", input_custom_dns())
+    menu_options["Custom"] = lambda: setting_dns_servers("change", input_custom_dns_panel())
     menu_options["Auto"] = lambda: setting_dns_servers("clear")
 
     separator = Separator()
@@ -50,7 +50,7 @@ def cli():
     menu = create_menu()
 
     while True:
-        display_active_dns()
+        active_networks_panel()
 
         choice = questionary.select("Set DNS Servers to:",
                                     choices=menu.keys(),
@@ -65,11 +65,7 @@ def cli():
                                         ]
                                     )).ask()
 
-        if choice is None:
-            console.print("[bold light_cyan3]Aborting...[/bold light_cyan3]")
-            break
-
-        if choice == "Exit":
+        if choice == "Exit" or choice is None:
             console.print("[bold light_cyan3]Exiting...[/bold light_cyan3]")
             break
 
@@ -84,13 +80,13 @@ def cli():
 def main():
     clear_terminal()
 
-    os_message = """
+    non_windows_err_msg = """
     Currently, this app can only be run on Windows, and won't work on other operating systems.
 
     [bold light_steel_blue1]Press any key to continue...[/bold light_steel_blue1]
     """
 
-    user_message = """
+    not_admin_err_msg = """
     Because this script changes your DNS server addresses, 
     you need to run this Python program as an Administrator, otherwise it will not work properly.
 
@@ -98,7 +94,7 @@ def main():
     """
 
     if os.name != "nt":
-        panel = Panel(os_message, title="DNS Changer Application", style="bold magenta", width=112)
+        panel = Panel(non_windows_err_msg, title="DNS Changer Application", style="bold magenta", width=112)
 
         console.print(panel)
 
@@ -107,7 +103,7 @@ def main():
 
     try:
         if not ctypes.windll.shell32.IsUserAnAdmin():
-            panel = Panel(user_message, title="DNS Changer Application", style="bold magenta", width=112)
+            panel = Panel(not_admin_err_msg, title="DNS Changer Application", style="bold magenta", width=112)
 
             console.print(panel)
 
