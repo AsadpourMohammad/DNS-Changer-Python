@@ -10,7 +10,7 @@ from rich.console import Console
 from rich.panel import Panel
 
 from dns_changer_cli.dns_actions import active_networks_panel, set_dns_servers_panel, input_custom_dns_panel
-from dns_changer_cli.json_data import get_saved_dns_providers
+from dns_changer_cli.dns_provider import get_saved_dns_providers
 
 console = Console()
 

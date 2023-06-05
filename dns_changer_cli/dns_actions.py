@@ -9,14 +9,10 @@ from rich import box
 from rich.panel import Panel
 from rich.columns import Columns
 
-from dns_utils.dns_windows_utils import get_all_networks_and_dns_servers, set_dns_of_network, is_network_dns_auto
-from dns_changer_cli.json_data import get_saved_dns_providers
+from dns_utils.dns_windows_utils import get_all_networks_and_dns_servers, set_dns_of_network
+from dns_changer_cli.dns_provider import get_provider_and_servers_of_network_dns, get_provider_of_servers
 
 console = Console()
-
-
-def abort():
-    console.print("[bold red]Aborting...[/bold red]")
 
 
 def active_networks_panel() -> None:
@@ -37,38 +33,6 @@ def active_networks_panel() -> None:
                   border_style="cyan bold", padding=(1, 5))
 
     console.print(Columns([panel], align="center"))
-
-
-def set_dns_servers_panel(action: Literal["change", "clear"], new_servers: tuple[str] = None) -> None:
-    if action == "change" and not new_servers:
-        abort()
-        return
-
-    selected_network = get_user_select_network()
-
-    if not selected_network:
-        abort()
-        return
-
-    old_provider, old_servers = get_provider_and_servers_of_network_dns(selected_network).values()
-
-    new_provider = get_provider_of_servers(new_servers) if action == "change" else "Auto"
-
-    if (action == "change" and old_servers == new_servers) or (action == "clear" and old_provider == "Auto"):
-        console.print(f"\n[bold red]Your DNS Servers are already set to "
-                      f"'{new_servers if action == 'change' else 'Auto'}'.[/bold red]")
-        return
-
-    choice = confirm_dns_change_panel(old_provider, old_servers, new_provider, new_servers)
-
-    if not choice:
-        abort()
-        return
-
-    def action_function():
-        return set_dns_of_network(action, selected_network, new_servers)
-
-    handle_dns_action(action, action_function)
 
 
 def input_custom_dns_panel() -> Union[Tuple[str], Tuple[str, str], None]:
@@ -93,8 +57,72 @@ def input_custom_dns_panel() -> Union[Tuple[str], Tuple[str, str], None]:
     return primary_dns, secondary_dns
 
 
-def confirm_dns_change_panel(current_name: str, current_servers: tuple[str], new_name: str,
-                             new_servers: tuple[str]) -> bool:
+def set_dns_servers_panel(action: Literal["change", "clear"], new_servers: tuple[str] = None) -> None:
+    if action == "change" and not new_servers:
+        __abort__()
+        return
+
+    selected_network = __get_user_select_network__()
+
+    if not selected_network:
+        __abort__()
+        return
+
+    old_provider, old_servers = get_provider_and_servers_of_network_dns(selected_network).values()
+
+    new_provider = get_provider_of_servers(new_servers) if action == "change" else "Auto"
+
+    if (action == "change" and old_servers == new_servers) or (action == "clear" and old_provider == "Auto"):
+        console.print(f"\n[bold red]Your DNS Servers are already set to "
+                      f"'{new_servers if action == 'change' else 'Auto'}'.[/bold red]")
+        return
+
+    choice = __confirm_dns_change_panel__(old_provider, old_servers, new_provider, new_servers)
+
+    if not choice:
+        __abort__()
+        return
+
+    def action_function():
+        return set_dns_of_network(action, selected_network, new_servers)
+
+    __handle_dns_action__(action, action_function)
+
+
+def __get_user_select_network__():
+    network_and_servers = get_all_networks_and_dns_servers()
+
+    if not network_and_servers:
+        console.print("[bold red]No active network connections found![/bold red]\n")
+        return None
+
+    selected_network = __select_network_connection_panel__(network_and_servers)
+
+    if not selected_network:
+        return None
+
+    return selected_network
+
+
+def __select_network_connection_panel__(networks_and_servers):
+    network_choices = [network_connection for network_connection in networks_and_servers.keys()]
+
+    selected_network = select("Select the network connection:", choices=network_choices, instruction=" ",
+                              style=Style(
+                                  [
+                                      ("qmark", "fg:#673ab7 bold"),
+                                      ('highlighted', 'fg:#d70000 bold'),
+                                      ("pointer", "fg:#d70000 bold"),
+                                      ('text', 'fg:#d7ffff bold'),
+                                      ("answer", "fg:#afd7ff bold"),
+                                  ]
+                              )).ask()
+
+    return selected_network
+
+
+def __confirm_dns_change_panel__(current_name: str, current_servers: tuple[str], new_name: str,
+                                 new_servers: tuple[str]) -> bool:
     table = Table(title="Confirm DNS Servers Change", box=box.ROUNDED, show_lines=True, width=100)
 
     table.add_column("Current DNS Servers", style="cyan bold", header_style="light_sky_blue1")
@@ -114,7 +142,7 @@ def confirm_dns_change_panel(current_name: str, current_servers: tuple[str], new
     return confirm("Are you sure you want to change the DNS Servers?").ask()
 
 
-def handle_dns_action(action: Literal["change", "clear"], action_function: set_dns_of_network) -> None:
+def __handle_dns_action__(action: Literal["change", "clear"], action_function: set_dns_of_network) -> None:
     console.print(f"\n[bold green]{'Changing' if action == 'change' else 'Clearing'} DNS Servers...[/bold green]\n")
 
     if action_function():
@@ -127,50 +155,5 @@ def handle_dns_action(action: Literal["change", "clear"], action_function: set_d
             f"[bold red]An error occurred while trying to {action} the DNS Servers! Aborting...[/bold red]\n")
 
 
-def get_user_select_network():
-    network_and_servers = get_all_networks_and_dns_servers()
-
-    if not network_and_servers:
-        console.print("[bold red]No active network connections found![/bold red]\n")
-        return None
-
-    selected_network = select_network_connection_panel(network_and_servers)
-
-    if not selected_network:
-        return None
-
-    return selected_network
-
-
-def select_network_connection_panel(networks_and_servers):
-    network_choices = [network_connection for network_connection in networks_and_servers.keys()]
-
-    selected_network = select("Select the network connection:", choices=network_choices, instruction=" ",
-                              style=Style(
-                                  [
-                                      ("qmark", "fg:#673ab7 bold"),
-                                      ('highlighted', 'fg:#d70000 bold'),
-                                      ("pointer", "fg:#d70000 bold"),
-                                      ('text', 'fg:#d7ffff bold'),
-                                      ("answer", "fg:#afd7ff bold"),
-                                  ]
-                              )).ask()
-
-    return selected_network
-
-
-def get_provider_and_servers_of_network_dns(network: str) -> dict[str, any]:
-    """
-    Checks to see if the DNS Servers of the selected network match a known provider.
-    It can either be a known provider, "Auto" if network is set to auto obtain, or "Unknown" if no match is made.
-    """
-    servers = get_all_networks_and_dns_servers()[network]
-
-    provider = "Auto" if is_network_dns_auto(network) else get_provider_of_servers(servers)
-
-    return {'provider': provider, 'servers': servers}
-
-
-def get_provider_of_servers(servers: tuple[str]) -> str:
-    return next((provider for provider, dns_servers in get_saved_dns_providers().items() if dns_servers == servers),
-                "Unknown")
+def __abort__():
+    console.print("[bold red]Aborting...[/bold red]")
