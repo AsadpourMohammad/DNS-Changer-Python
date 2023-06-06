@@ -1,4 +1,5 @@
 import json
+import os
 
 from dns_changer_cli.wrappers.rich_wrappers import TextPanelWrapper, print_panel, print_text
 
@@ -37,20 +38,20 @@ def __read_dns_providers_from_json__() -> dict[str, tuple[str]]:
     json_err_msg = """
         An error occurred during the loading of DNS Providers JSON file.
         
-        Please create a dnsProviders.json file in the same directory as the current script with
-        the desired providers and their dns servers if one does not exists, and then try again.
+        Make sure to add the providers in this format:
     
-        Also, make sure to add the providers in this format:
-    
-        {
-            "Google": ["8.8.8.8", "8.8.4.4"]
-        }
+        { "Google": ["8.8.8.8", "8.8.4.4"] }
         
         You can use the app now, but you will have to enter the DNS servers manually.
         """
     
+    json_file_path = 'dnsProviders.json'
+    if not os.path.isfile(json_file_path):
+        with open(json_file_path, 'w') as json_file:
+            json_file.write('{ "Shecan": ["178.22.122.100", "185.51.200.2"] }')
+    
     try:
-        with open('dnsProviders.json', 'r') as dns_providers_file:
+        with open(json_file_path, 'r') as dns_providers_file:
             saved_dns_providers = json.load(dns_providers_file)
 
         for provider in saved_dns_providers:
