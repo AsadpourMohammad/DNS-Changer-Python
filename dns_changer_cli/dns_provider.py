@@ -6,6 +6,7 @@ from dns_changer_cli.wrappers.rich_wrappers import TextPanelWrapper, print_panel
 from dns_utils.dns_windows_utils import get_all_networks_and_dns_servers, is_network_dns_auto
 
 __DNS_PROVIDERS__ = None
+json_file_path = 'dnsProviders.json'
 
 
 def get_saved_dns_providers() -> dict[str, tuple[str]]:
@@ -34,6 +35,15 @@ def get_provider_of_servers(servers: tuple[str]) -> str:
                 "Unknown")
 
 
+def save_dns_provider_into_json(provider: str, servers: tuple[str]) -> None:
+    global __DNS_PROVIDERS__
+
+    __DNS_PROVIDERS__[provider] = servers
+
+    with open(json_file_path, 'w') as dns_providers_file:
+        json.dump(__DNS_PROVIDERS__, dns_providers_file, indent=4)
+
+
 def __read_dns_providers_from_json__() -> dict[str, tuple[str]]:
     json_err_msg = """
         An error occurred during the loading of DNS Providers JSON file.
@@ -44,12 +54,16 @@ def __read_dns_providers_from_json__() -> dict[str, tuple[str]]:
         
         You can use the app now, but you will have to enter the DNS servers manually.
         """
-    
-    json_file_path = 'dnsProviders.json'
+
     if not os.path.isfile(json_file_path):
-        with open(json_file_path, 'w') as json_file:
-            json_file.write('{ "Shecan": ["178.22.122.100", "185.51.200.2"] }')
-    
+        default_providers = {
+            'Shecan': ['178.22.122.100', '185.51.200.2'],
+            'Google': ['8.8.8.8', '8.8.4.4']
+        }
+
+        with open('dnsProviders.json', 'w') as json_file:
+            json.dump(default_providers, json_file, indent=4)
+
     try:
         with open(json_file_path, 'r') as dns_providers_file:
             saved_dns_providers = json.load(dns_providers_file)

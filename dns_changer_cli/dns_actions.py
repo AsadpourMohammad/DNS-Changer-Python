@@ -6,7 +6,8 @@ from questionary import text, confirm
 from dns_changer_cli.wrappers.rich_wrappers import TablePanelWrapper, TableWrapper, print_err, print_text, print_panel
 from dns_changer_cli.wrappers.questionary_wrappers import SelectWrapper
 from dns_utils.dns_windows_utils import get_all_networks_and_dns_servers, set_dns_of_network
-from dns_changer_cli.dns_provider import get_provider_and_servers_of_network_dns, get_provider_of_servers
+from dns_changer_cli.dns_provider import get_provider_and_servers_of_network_dns, get_provider_of_servers, \
+    save_dns_provider_into_json
 
 
 def active_networks_panel() -> None:
@@ -22,7 +23,7 @@ def active_networks_panel() -> None:
                                  rows=all_networks_info,
                                  type="show-current")
 
-    panel_wrapper = TablePanelWrapper(title=table_wrapper.title, table=table_wrapper.table)
+    panel_wrapper = TablePanelWrapper(table=table_wrapper.table)
 
     print_panel(panel_wrapper.panel)
 
@@ -44,6 +45,8 @@ def input_custom_dns_panel() -> Union[Tuple[str], Tuple[str, str], None]:
 
     if not secondary_dns:
         return None
+
+    __ask_to_save_dns_provider__((primary_dns, secondary_dns))
 
     return primary_dns, secondary_dns
 
@@ -116,7 +119,7 @@ def __confirm_dns_change_panel__(current_name: str, current_servers: tuple[str],
                                  rows=change_info,
                                  type="show-diff")
 
-    panel_wrapper = TablePanelWrapper(title=table_wrapper.title, table=table_wrapper.table)
+    panel_wrapper = TablePanelWrapper(table=table_wrapper.table)
 
     print_panel(panel_wrapper.panel)
 
@@ -132,6 +135,21 @@ def __handle_dns_action__(action: Literal["change", "clear"], action_function: s
         active_networks_panel()
     else:
         print_err(f"An error occurred while trying to {action} the DNS Servers! Aborting...\n")
+
+
+def __ask_to_save_dns_provider__(servers: tuple[str, str]):
+    print_text("Do you wish to save this DNS Addresses for future use?")
+
+    if confirm("Save DNS Addresses?").ask():
+        provider_name = text("Enter a name for the DNS Provider:").ask()
+
+        print_text("\nSaving DNS Addresses...")
+
+        save_dns_provider_into_json(provider_name, servers)
+
+        print_text("DNS Addresses saved successfully!\n")
+    else:
+        return
 
 
 def __abort__():

@@ -8,15 +8,15 @@ from rich.columns import Columns
 
 
 class TextPanelWrapper:
-    def __init__(self, title: str, text: str):
+    def __init__(self, text: str, title: str = "DNS Changer Application"):
         self.title = title
         self.panel = Panel(renderable=text, title=title, style="bold magenta", width=112)
 
 
 class TablePanelWrapper:
-    def __init__(self, title: str, table: Table):
+    def __init__(self, table: Table, title: str = "DNS Changer Application"):
         self.title = title
-        self.panel = Panel(renderable=table, title=title, style="bold", title_align="left",
+        self.panel = Panel(renderable=table, title=self.title, style="bold", title_align="left",
                            border_style="cyan bold", padding=(1, 5))
 
 

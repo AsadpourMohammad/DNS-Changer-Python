@@ -43,10 +43,10 @@ def __create_menu_options__():
 
 
 def __cli__():
-    menu_options = __create_menu_options__()
-
     while True:
         active_networks_panel()
+
+        menu_options = __create_menu_options__()
 
         choice = SelectWrapper("Set DNS Servers to:", choices=menu_options.keys())()
 
