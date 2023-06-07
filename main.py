@@ -1,4 +1,4 @@
-from dns_changer_cli.dns_changer_cli import main
+from dns_changer.main import main
 
 if __name__ == '__main__':
     main()

@@ -1,5 +1,4 @@
-import questionary
-from questionary import Style, text, confirm, select
+from questionary import Style, select
 
 
 class SelectWrapper:
@@ -8,7 +7,7 @@ class SelectWrapper:
         self.choices = choices
 
     def __call__(self):
-        return questionary.select(
+        return select(
             self.question,
             choices=self.choices,
             instruction=" ",

@@ -7,7 +7,7 @@ from typing import Dict, Literal
 # Functions to get and set DNS Servers on windows
 
 
-def get_all_networks_and_dns_servers() -> Dict[str, tuple[str]]:
+def get_all_networks_and_dns_servers() -> Dict[str, tuple[str, str]]:
     wmi_service = wmi.WMI()
 
     networks_and_servers = {adaptor.Description: adaptor.DNSServerSearchOrder
@@ -17,7 +17,7 @@ def get_all_networks_and_dns_servers() -> Dict[str, tuple[str]]:
     return networks_and_servers
 
 
-def get_dns_of_network(network: str) -> Dict[str, tuple[str]]:
+def get_dns_of_network(network: str) -> Dict[str, tuple[str, str]]:
     wmi_service = wmi.WMI()
 
     network = wmi_service.Win32_NetworkAdapterConfiguration(IPEnabled=True, Description=network)[0]
