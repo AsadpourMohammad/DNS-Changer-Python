@@ -11,19 +11,15 @@ from .panel_select_network import select_network_panel
 from ...dns.utils.dns_windows_utils import set_dns_of_network
 
 
-def abort():
-    print_err("Aborting...")
-
-
 def set_dns_servers_panel(action: Literal["change", "clear"], new_servers: tuple[str, str] = None) -> None:
     if action == "change" and not new_servers:
-        abort()
+        ـabort()
         return
 
     selected_network = select_network_panel()
 
     if not selected_network:
-        abort()
+        ـabort()
         return
 
     old_provider, old_servers = get_provider_and_servers_of_network_dns(selected_network).values()
@@ -37,7 +33,7 @@ def set_dns_servers_panel(action: Literal["change", "clear"], new_servers: tuple
     choice = _confirm_dns_change_panel(old_provider, old_servers, new_provider, new_servers)
 
     if not choice:
-        abort()
+        ـabort()
         return
 
     def action_function():
@@ -80,3 +76,7 @@ def _handle_dns_action(action: Literal["change", "clear"], action_function: set_
         active_networks_panel()
     else:
         print_err(f"An error occurred while trying to {action} the DNS Servers! Aborting...\n")
+
+
+def ـabort():
+    print_err("Aborting...")

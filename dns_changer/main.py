@@ -28,7 +28,7 @@ def main():
     """
 
     if os.name != "nt":
-        panel_wrapper = TextPanelWrapper("DNS Changer Application", non_windows_os_err_msg)
+        panel_wrapper = TextPanelWrapper(text=non_windows_os_err_msg)
 
         print_panel(panel_wrapper.panel)
 
@@ -37,7 +37,7 @@ def main():
 
     try:
         if not ctypes.windll.shell32.IsUserAnAdmin():
-            panel_wrapper = TextPanelWrapper("DNS Changer Application", not_admin_err_msg)
+            panel_wrapper = TextPanelWrapper(text=not_admin_err_msg)
 
             print_panel(panel_wrapper.panel)
 

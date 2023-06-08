@@ -12,10 +12,12 @@ def active_networks_panel() -> None:
         for network, dns_servers in networks_and_servers.items()
     ]
 
-    table_wrapper = TableWrapper(title="Current DNS Information",
-                                 columns=["Network Connection", "DNS Servers", "Provider"],
-                                 rows=all_networks_info,
-                                 type="show-current")
+    table_wrapper = TableWrapper(
+        title="Current DNS Information",
+        columns=["Network Connection", "DNS Servers", "Provider"],
+        rows=all_networks_info,
+        type="show-current"
+    )
 
     panel_wrapper = TablePanelWrapper(table=table_wrapper.table)
 
